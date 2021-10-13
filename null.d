@@ -1,1 +1,1 @@
-radiolink.o: /dev/null
+buzzdeck.o: /dev/null

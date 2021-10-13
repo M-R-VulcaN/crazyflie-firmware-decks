@@ -33,6 +33,7 @@ static void emergencyLandInit(DeckInfo *info)
         pinMode(DECK_GPIO_IO1, INPUT);     
         xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
                 TASK_SIZE, NULL, TASK_PRIORITY, NULL);
+        isEmergencyLandInit = true;
     }
 }
 
@@ -42,8 +43,8 @@ static bool emergencyLandTest()
 }
 
 const DeckDriver emergencyLand_driver = {
-    .vid = 0,
-    .pid = 0,
+    .vid = 1,
+    .pid = 1,
     .name = "emergency_land",
 
 

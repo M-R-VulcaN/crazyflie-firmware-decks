@@ -1,1 +1,1 @@
-usddeck.o: /dev/null
+deck_digital.o: /dev/null

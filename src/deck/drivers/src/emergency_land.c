@@ -1,3 +1,10 @@
+/*
+This code controls the emergency landing option. The ermergency land option is controlled via the parameter named 'deck.eland'.
+If the param equals to 1 then the emergency landing code is launched. 
+The param is changed whenever the crazyflie receives a high digitalRead from the gpio pin 1 which is connected to the NRF's emergency land 
+output pin. Whenever the NRF sends a high signal at DECK_GPIO_IO1 then the code sets the param 'deck.eland' to 1 which causes it to launch the 
+emergency landing operation.
+*/
 #include "deck.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -12,22 +19,26 @@
 #define EMERGENCY_LAND_PIN DECK_GPIO_IO1
 
 static bool isEmergencyLandInit = false;
-static bool emergencyLandingFlag = false;
+
+static uint8_t emergencyLandingParam = false;
+
+static paramVarId_t emergencyLandingFlagParamId = {0};
 
 static void listenToEmergencyLand(void* data) 
 {
     systemWaitStart();
 
-    while(!emergencyLandingFlag)
+    while(!paramGetUint(emergencyLandingFlagParamId)) // waits until 'deck.eland' equals to 1
     {
-        if(digitalRead(DECK_GPIO_IO1))
+        vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));
+        if(digitalRead(EMERGENCY_LAND_PIN))
         {
-            DEBUG_PRINT("ELAND: emergency landing!\n");
-            //Todo: add emergency landing code 
-            emergencyLandingFlag = true;
+            paramSetInt(emergencyLandingFlagParamId, true);
         }
-        vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));   
     }
+
+    DEBUG_PRINT("ELAND: emergency landing!\n");
+    //Todo: add emergency landing code 
 
     vTaskDelete(NULL); //End current task
 }
@@ -40,6 +51,8 @@ static void emergencyLandInit(DeckInfo *info)
         DEBUG_PRINT("ELAND: emergency landing is enabled\n");
         pinMode(EMERGENCY_LAND_PIN, INPUT);    
 
+        emergencyLandingFlagParamId = paramGetVarId("deck","eland");
+
         xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
                 TASK_SIZE, NULL, TASK_PRIORITY, NULL);
 
@@ -50,7 +63,7 @@ static void emergencyLandInit(DeckInfo *info)
 static bool emergencyLandTest()
 {
     bool successFlag = true;
-
+    
     if (!isEmergencyLandInit) 
     {
         DEBUG_PRINT("ELAND: Error while initializing the emergency landing deck\n");
@@ -76,5 +89,5 @@ DECK_DRIVER(emergencyLand_driver);
 
 PARAM_GROUP_START(deck)
 
-PARAM_ADD(PARAM_UINT8, eland, &emergencyLandingFlag)
+PARAM_ADD(PARAM_UINT8, eland, &emergencyLandingParam)
 PARAM_GROUP_STOP(deck)

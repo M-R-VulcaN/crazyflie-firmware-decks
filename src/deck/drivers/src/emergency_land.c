@@ -4,9 +4,11 @@
 #include "task.h"
 #include "pm.h"
 #include "debug.h"
-#define TASK_SIZE 40
+#define TASK_SIZE configMINIMAL_STACK_SIZE
 #define TASK_DELAY 100
 #define TASK_PRIORITY 3
+
+static bool isEmergencyLandInit = false;
 
 static void listenToEmergencyLand(void* data) 
 {
@@ -23,15 +25,18 @@ static void listenToEmergencyLand(void* data)
     }
 }
 
-void emergencyLandInit(DeckInfo *info)
+static void emergencyLandInit(DeckInfo *info)
 {
-    DEBUG_PRINT("emergency landing is enabled\n");
-    pinMode(DECK_GPIO_IO1, INPUT);     
-    xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
-              TASK_SIZE, NULL, TASK_PRIORITY, NULL);
+    if(!isEmergencyLandInit)
+    {
+        DEBUG_PRINT("emergency landing is enabled\n");
+        pinMode(DECK_GPIO_IO1, INPUT);     
+        xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
+                TASK_SIZE, NULL, TASK_PRIORITY, NULL);
+    }
 }
 
-bool emergencyLandTest()
+static bool emergencyLandTest()
 {
     return true;
 }

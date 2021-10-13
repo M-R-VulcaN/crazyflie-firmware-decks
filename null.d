@@ -1,1 +1,1 @@
-buzzdeck.o: /dev/null
+usddeck.o: /dev/null

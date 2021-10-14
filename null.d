@@ -1,1 +1,1 @@
-deck_digital.o: /dev/null
+deck_constants.o: /dev/null

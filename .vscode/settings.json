@@ -5,6 +5,7 @@
         "**/bower_components": true
     },
     "files.associations": {
-        "param.h": "c"
+        "param.h": "c",
+        "freertos.h": "c"
     }
 }

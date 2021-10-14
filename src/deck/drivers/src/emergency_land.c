@@ -7,6 +7,7 @@ emergency landing operation.
 */
 #include "deck.h"
 #include "FreeRTOS.h"
+#include "system.h"
 #include "task.h"
 #include "pm.h"
 #include "debug.h"
@@ -31,8 +32,10 @@ static void listenToEmergencyLand(void* data)
     while(!paramGetUint(emergencyLandingFlagParamId)) // waits until 'deck.eland' equals to 1
     {
         vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));
-        if(digitalRead(EMERGENCY_LAND_PIN))
+        if(digitalRead(EMERGENCY_LAND_PIN)) 
         {
+            DEBUG_PRINT("ELAND: received emergency landing from NRF!\n");
+
             paramSetInt(emergencyLandingFlagParamId, true);
         }
     }

@@ -97,6 +97,7 @@ void appMain()
   
   paramVarId_t idPositioningDeck = paramGetVarId("deck", "bcFlow2");
   paramVarId_t idMultiranger = paramGetVarId("deck", "bcMultiranger");
+  paramVarId_t idEmergencyLand = paramGetVarId("deck", "eland"); //Added by M-R-VulkaN
 
 
   float factor = velMax/radius;
@@ -143,8 +144,8 @@ void appMain()
         setHoverSetpoint(&setpoint, velFront, velSide, height, 0);
         commanderSetSetpoint(&setpoint, 3);
       }
-
-      if (height < 0.1f) {
+      
+      if (height < 0.1f || paramGetUint(idEmergencyLand)) {
         state = stopping;
         DEBUG_PRINT("X\n");
       }

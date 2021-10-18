@@ -7,7 +7,6 @@ PROJ_OBJ += push.o
 
 # added by M-R-VulkaN for testing
 CFLAGS += -DDECK_FORCE=emergency_land
-DEBUG=1 
 
 CRAZYFLIE_BASE=../../..
 include $(CRAZYFLIE_BASE)/Makefile

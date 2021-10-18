@@ -19,7 +19,7 @@ emergency landing operation.
 #define TASK_PRIORITY 3
 #define EMERGENCY_LAND_PIN DECK_GPIO_IO2 //The STM pin used to receive the signal from the NRF
 
-static bool isEmergencyLandInit = false;
+static uint8_t isEmergencyLandInit = false;
 
 static uint8_t emergencyLandingParam = false;
 
@@ -54,7 +54,7 @@ static void emergencyLandInit(DeckInfo *info)
         DEBUG_PRINT("ELAND: emergency landing is enabled\n");
         pinMode(EMERGENCY_LAND_PIN, INPUT);    
 
-        emergencyLandingFlagParamId = paramGetVarId("deck","eland");
+        emergencyLandingFlagParamId = paramGetVarId("emergency","land");
 
         xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
                 TASK_SIZE, NULL, TASK_PRIORITY, NULL);
@@ -92,5 +92,12 @@ DECK_DRIVER(emergencyLand_driver);
 
 PARAM_GROUP_START(deck)
 
-PARAM_ADD(PARAM_UINT8, eland, &emergencyLandingParam)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, eland, &isEmergencyLandInit)
+
 PARAM_GROUP_STOP(deck)
+
+PARAM_GROUP_START(emergency)
+
+PARAM_ADD(PARAM_UINT8, land, &emergencyLandingParam)
+
+PARAM_GROUP_STOP(emergency)

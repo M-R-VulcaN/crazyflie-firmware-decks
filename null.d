@@ -1,1 +1,1 @@
-deck_constants.o: /dev/null
+emergency_land.o: /dev/null

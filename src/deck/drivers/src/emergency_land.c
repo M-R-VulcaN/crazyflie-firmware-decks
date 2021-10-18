@@ -17,7 +17,7 @@ emergency landing operation.
 #define EMERGENCY_LAND_CHECK_FREQUENCY 10
 
 #define TASK_PRIORITY 3
-#define EMERGENCY_LAND_PIN DECK_GPIO_IO1
+#define EMERGENCY_LAND_PIN DECK_GPIO_IO2 //The STM pin used to receive the signal from the NRF
 
 static bool isEmergencyLandInit = false;
 

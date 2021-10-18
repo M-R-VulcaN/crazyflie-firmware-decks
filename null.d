@@ -1,1 +1,1 @@
-zranger.o: /dev/null
+multiranger.o: /dev/null

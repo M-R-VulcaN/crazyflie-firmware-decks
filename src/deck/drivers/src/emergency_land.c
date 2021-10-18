@@ -5,6 +5,8 @@ The param is changed whenever the crazyflie receives a high digitalRead from the
 output pin. Whenever the NRF sends a high signal at DECK_GPIO_IO1 then the code sets the param 'deck.eland' to 1 which causes it to launch the 
 emergency landing operation.
 */
+
+
 #include "deck.h"
 #include "FreeRTOS.h"
 #include "system.h"
@@ -12,12 +14,10 @@ emergency landing operation.
 #include "pm.h"
 #include "debug.h"
 #include "param.h"
+#include "emergency_land.h"
 
-#define TASK_SIZE configMINIMAL_STACK_SIZE
-#define EMERGENCY_LAND_CHECK_FREQUENCY 10
 
-#define TASK_PRIORITY 3
-#define EMERGENCY_LAND_PIN DECK_GPIO_IO2 //The STM pin used to receive the signal from the NRF
+
 
 static uint8_t isEmergencyLandInit = false;
 
@@ -25,7 +25,11 @@ static uint8_t emergencyLandingParam = false;
 
 static paramVarId_t emergencyLandingFlagParamId = {0};
 
-static void listenToEmergencyLand(void* data) 
+
+
+//This function listens to the EMERGENCY_LAND_PIN in the frequency of EMERGENCY_LAND_CHECK_FREQUENCY
+//if the pin is HIGH then the function starts the emergency landing operation.
+static void listenToEmergencyLandTask(void* ignored) 
 {
     systemWaitStart();
 
@@ -54,9 +58,9 @@ static void emergencyLandInit(DeckInfo *info)
         DEBUG_PRINT("ELAND: emergency landing is enabled\n");
         pinMode(EMERGENCY_LAND_PIN, INPUT);    
 
-        emergencyLandingFlagParamId = paramGetVarId("emergency","land");
+        emergencyLandingFlagParamId = paramGetVarId(ELAND_FLAG_GROUP_NAME, ELAND_FLAG_PARAM_NAME);
 
-        xTaskCreate(listenToEmergencyLand, "emergencyLandTask",
+        xTaskCreate(listenToEmergencyLandTask, "emergencyLandTask",
                 TASK_SIZE, NULL, TASK_PRIORITY, NULL);
 
         isEmergencyLandInit = true;
@@ -77,12 +81,12 @@ static bool emergencyLandTest()
 }
 
 const DeckDriver emergencyLand_driver = {
-    .vid = 1,
-    .pid = 1,
+    .vid = EMERGENCY_LAND_VID,
+    .pid = EMERGENCY_LAND_PID,
     .name = "emergency_land",
 
 
-    .usedGpio = DECK_USING_IO_1,
+    .usedGpio = EMERGENCY_LAND_PIN_USING,
 
     .init = emergencyLandInit,
     .test = emergencyLandTest,

@@ -1,0 +1,20 @@
+#ifndef __EMERGENCY_LAND_H__
+#define __EMERGENCY_LAND_H__
+
+#define EMERGENCY_LAND_CHECK_FREQUENCY 10
+
+#define EMERGENCY_LAND_VID 1
+#define EMERGENCY_LAND_PID 1
+
+#define ELAND_FLAG_GROUP_NAME "emergency"
+#define ELAND_FLAG_PARAM_NAME "land"
+
+#define TASK_SIZE configMINIMAL_STACK_SIZE
+
+#define TASK_PRIORITY 3
+
+
+#define EMERGENCY_LAND_PIN DECK_GPIO_IO2 //The STM pin used to receive the signal from the NRF
+#define EMERGENCY_LAND_PIN_USING DECK_USING_IO_2
+
+#endif //__EMERGENCY_LAND_H__

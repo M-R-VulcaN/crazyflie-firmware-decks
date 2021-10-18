@@ -97,7 +97,7 @@ void appMain()
   
   paramVarId_t idPositioningDeck = paramGetVarId("deck", "bcFlow2");
   paramVarId_t idMultiranger = paramGetVarId("deck", "bcMultiranger");
-  paramVarId_t idEmergencyLand = paramGetVarId("deck", "eland"); //Added by M-R-VulkaN
+  paramVarId_t idEmergencyLand = paramGetVarId(ELAND_FLAG_GROUP_NAME, ELAND_FLAG_PARAM_NAME); //Added by M-R-VulkaN
 
 
   float factor = velMax/radius;

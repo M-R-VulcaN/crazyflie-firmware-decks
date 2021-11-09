@@ -1,0 +1,16 @@
+#ifndef __OXYGEN_SENSOR_H__
+#define __OXYGEN_SENSOR_H__
+
+#define OXYGEN_SENSOR_CHECK_FREQUENCY 5
+
+#define OXYGEN_SENSOR_VID 1
+#define OXYGEN_SENSOR_PID 11
+
+#define TASK_SIZE configMINIMAL_STACK_SIZE
+
+#define TASK_PRIORITY 3
+
+#define OXYGEN_SENSOR_PIN DECK_GPIO_MOSI //The STM pin used to receive the signal from the NRF
+#define OXYGEN_SENSOR_PIN_USING DECK_USING_PA6
+
+#endif //__OXYGEN_SENSOR_H__

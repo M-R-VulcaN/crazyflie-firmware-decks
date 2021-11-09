@@ -213,8 +213,7 @@ PROJ_OBJ += multiranger.o
 PROJ_OBJ += lighthouse.o
 PROJ_OBJ += activeMarkerDeck.o
 PROJ_OBJ += oxygen_sensor.o #added by M-R-VulkaN
-CFLAGS += -DDECK_FORCE=myHello #added by M-R-VulkaN
-
+CFLAGS += -DDECK_FORCE=oxygen_sensor #added by M-R-VulkaN
 
 # Uart2 Link for CRTP communication is not compatible with decks using uart2
 ifeq ($(UART2_LINK), 1)

@@ -3,5 +3,10 @@
         "**/generated": true,
         "**/node_modules": true,
         "**/bower_components": true
+    },
+    "files.associations": {
+        "param.h": "c",
+        "usd_download.h": "c",
+        "usddeck.h": "c"
     }
 }

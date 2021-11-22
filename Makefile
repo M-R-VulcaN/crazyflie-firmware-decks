@@ -212,6 +212,8 @@ PROJ_OBJ += oa.o
 PROJ_OBJ += multiranger.o
 PROJ_OBJ += lighthouse.o
 PROJ_OBJ += activeMarkerDeck.o
+PROJ_OBJ += usd_download.o #Added by M-R-VulkaN
+CFLAGS += -DDECK_FORCE=usd_download #added by M-R-VulkaN
 
 # Uart2 Link for CRTP communication is not compatible with decks using uart2
 ifeq ($(UART2_LINK), 1)

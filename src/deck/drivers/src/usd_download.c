@@ -1,4 +1,3 @@
-
 #include "deck.h"
 #include "FreeRTOS.h"
 #include "system.h"
@@ -9,6 +8,7 @@
 #include "param.h"
 #include "usd_download.h"
 #include "usddeck.h"
+#include "usec_time.h"
 
 #define TASK_SIZE configMINIMAL_STACK_SIZE*3
 
@@ -21,11 +21,15 @@ static uint8_t usdDownloadParam = false;
 static paramVarId_t usdDownloadFlagParamId = {0};
 
 static uint32_t logSize = 0;
+static uint32_t currAddr = 0;
+
+
 
 static void listenToEmergencyLandTask(void* ignored) 
 {
     systemWaitStart();
-
+    uint8_t readBuffer[25];
+    
     while(true) // waits until 'deck.eland' equals to 1
     {
         vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));
@@ -38,8 +42,17 @@ static void listenToEmergencyLandTask(void* ignored)
                 DEBUG_PRINT("USDLOAD: [fail] logging isn't stopped\n");
                 continue;
             }
-            
+            DEBUG_PRINT("timestamp 1: %lld\n",usecTimestamp());
 
+            while(logSize-25>currAddr)
+            {
+                usddeckRead(currAddr, readBuffer,25);
+                currAddr+=25;
+            }
+            DEBUG_PRINT("timestamp 2: %lld\n",usecTimestamp());
+
+            usdDownloadParam = 0;
+            currAddr = 0;
 
         }
     }
@@ -77,15 +90,6 @@ static bool usdDownloadTest()
         DEBUG_PRINT("USDLOAD: [fail] usddeck is not initialized\n");
         successFlag = false;
     }
-    // else 
-    // {
-    //     paramVarId_t isLoggingPossibleParam = paramGetVarId("usd", "canLog");
-    //     if(!paramGetUint(isLoggingPossibleParam))
-    //     {
-    //         DEBUG_PRINT("USDLOAD: [fail] cannot log\n");
-    //         successFlag = false;
-    //     }
-    // }
 
     return successFlag;
 }

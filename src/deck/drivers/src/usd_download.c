@@ -8,8 +8,9 @@
 #include "app_channel.h"
 #include "param.h"
 #include "usd_download.h"
+#include "usddeck.h"
 
-#define TASK_SIZE configMINIMAL_STACK_SIZE
+#define TASK_SIZE configMINIMAL_STACK_SIZE*3
 
 #define TASK_PRIORITY 3
 
@@ -19,6 +20,7 @@ static uint8_t usdDownloadParam = false;
 
 static paramVarId_t usdDownloadFlagParamId = {0};
 
+static uint32_t logSize = 0;
 
 static void listenToEmergencyLandTask(void* ignored) 
 {
@@ -29,9 +31,19 @@ static void listenToEmergencyLandTask(void* ignored)
         vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));
         if(paramGetUint(usdDownloadFlagParamId))
         {
-            DEBUG_PRINT("USDLOAD: downloading...");
+            DEBUG_PRINT("USDLOAD: downloading...\n");
+            logSize = usddeckFileSize();
+            if(0==logSize)
+            {
+                DEBUG_PRINT("USDLOAD: [fail] logging isn't stopped\n");
+                continue;
+            }
+            
+
+
         }
     }
+    vTaskDelete(NULL);
 }
 
 
@@ -57,14 +69,23 @@ static bool usdDownloadTest()
     
     if (!isUsdDownloadInit) 
     {
-        DEBUG_PRINT("USDLOAD: Error while initializing the usd download deck\n");
+        DEBUG_PRINT("USDLOAD: [fail] Error while initializing the usd download deck\n");
         successFlag = false;
     }
     if(!paramGetUint(isUsdDeckInit))
     {
-        DEBUG_PRINT("USDLOAD: usddeck is not initialized\n");
+        DEBUG_PRINT("USDLOAD: [fail] usddeck is not initialized\n");
         successFlag = false;
     }
+    // else 
+    // {
+    //     paramVarId_t isLoggingPossibleParam = paramGetVarId("usd", "canLog");
+    //     if(!paramGetUint(isLoggingPossibleParam))
+    //     {
+    //         DEBUG_PRINT("USDLOAD: [fail] cannot log\n");
+    //         successFlag = false;
+    //     }
+    // }
 
     return successFlag;
 }

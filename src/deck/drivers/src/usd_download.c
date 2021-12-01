@@ -10,7 +10,7 @@
 #include "usddeck.h"
 #include "usec_time.h"
 
-#define TASK_SIZE configMINIMAL_STACK_SIZE*3
+#define TASK_SIZE configMINIMAL_STACK_SIZE*4
 
 #define TASK_PRIORITY 3
 
@@ -20,40 +20,84 @@ static uint8_t usdDownloadParam = false;
 
 static paramVarId_t usdDownloadFlagParamId = {0};
 
-static uint32_t logSize = 0;
-static uint32_t currAddr = 0;
+static void usdDownload()
+{
+    uint8_t buff[APP_CHANNLE_MAX_LEN] = {0}; //create buffer for messages
+    uint8_t r_data[APP_CHANNLE_R_LEN] = {0}; //create buffer for responses
+
+    buff[0] = APP_CHANNLE_SIZE_MSG;
+    uint32_t datasize = usddeckFileSize();
+    memcpy(&(buff[1]), &datasize, 4); //make size message
+    
+    do
+    {
+    appchannelSendPacket(buff, APP_CHANNLE_MSG_HEADER_LEN);
+    } while (!appchannelReceivePacket(r_data, APP_CHANNLE_R_LEN, 100) && usdDownloadParam); 
+        //send and wait for response, if none given, send again after 100ms
+        //incase respose was 0 (success) continiue 
+        //incase 1 (wrong type) continiue anyway. the reason is that if not size reqyest isnt the one needed, 
+        //    then the one needed is either a data msg or finished msg, both are further on and require continiuing. 
+        //    can occur if first response from client was missed and the second request was sent when the client expected a data response next
+        //incase 2 (not all data recived) not possble
+        //incase 3 (client not running) it will exit and stop
+    
+    uint32_t lastAddr = 0;
+    uint32_t addr = 0;
+    for( addr = 0; addr < datasize && r_data[0] != APP_CHANNLE_R_NOT_RUNNING && usdDownloadParam;)
+    {   //read next data in loop until all data was properly sent, client stopped running or sendAppChannle has been set to 0
+
+    memset(buff, 0, sizeof(buff)); //reset buff
+    memcpy(&buff[1], &addr, 4);
+    buff[0] = APP_CHANNLE_DATA_MSG; //set data msg header
+
+    if (addr + APP_CHANNLE_MAX_MSG_LEN <= datasize     &&  usddeckRead(addr, &buff[5], APP_CHANNLE_MAX_MSG_LEN)) 
+    {   //incase remaining is bigger then len on data in msg, set as much as possble data and send
+        appchannelSendPacket(buff, APP_CHANNLE_MAX_LEN);
+    }
+    else if(addr + APP_CHANNLE_MAX_MSG_LEN > datasize  &&  usddeckRead(addr, &buff[5], datasize - addr))
+    {   //incase remaining is smaller then len on data in msg, set as much the remaining data and send
+        appchannelSendPacket(buff, datasize - addr + APP_CHANNLE_MSG_HEADER_LEN);
+    }
+
+    addr += APP_CHANNLE_MAX_MSG_LEN; // increase addr
+
+    if(addr >= datasize || addr-lastAddr >= 2000) //if reached end or sent 2000 bytes or more, check if data was recived properly and continiue
+    {
+        memset(buff, 0, sizeof(buff)); //reset buffer
+        buff[0] = APP_CHANNLE_FINISHED_MSG;
+        lastAddr = (addr <= datasize) ? addr : datasize;
+        memcpy(&(buff[1]), &lastAddr, 4); //make finished msg
+        
+        do
+        {
+        appchannelSendPacket(buff, APP_CHANNLE_MSG_HEADER_LEN); 
+        } while (!appchannelReceivePacket(r_data, APP_CHANNLE_R_LEN, 100) && usdDownloadParam); //send and wait for response, if none given, send again after 100ms
+
+        if(r_data[0] == APP_CHANNLE_R_NOT_ALL_RECIVED || r_data[0] == APP_CHANNLE_R_SUCESS) //if not all data was recived properly by client
+        {
+        memcpy(&lastAddr, &(r_data[1]), 4); // get the addr where he stopped
+        addr = lastAddr; //set it to be the next one sent in the next 3000 byteas
+        }
+    }
+    }
 
 
+}
 
 static void listenToEmergencyLandTask(void* ignored) 
 {
     systemWaitStart();
-    uint8_t readBuffer[25];
-    
+    paramVarId_t loggingParam = paramGetVarId("usd", "logging");
     while(true) // waits until 'deck.eland' equals to 1
     {
         vTaskDelay(F2T(EMERGENCY_LAND_CHECK_FREQUENCY));
-        if(paramGetUint(usdDownloadFlagParamId))
+        if(usdDownloadParam && !paramGetUint(loggingParam))
         {
             DEBUG_PRINT("USDLOAD: downloading...\n");
-            logSize = usddeckFileSize();
-            if(0==logSize)
-            {
-                DEBUG_PRINT("USDLOAD: [fail] logging isn't stopped\n");
-                continue;
-            }
-            DEBUG_PRINT("timestamp 1: %lld\n",usecTimestamp());
+            
+            usdDownload();
 
-            while(logSize-25>currAddr)
-            {
-                usddeckRead(currAddr, readBuffer,25);
-                currAddr+=25;
-            }
-            DEBUG_PRINT("timestamp 2: %lld\n",usecTimestamp());
-
-            usdDownloadParam = 0;
-            currAddr = 0;
-
+            usdDownloadParam = false; //turn off sendAppChannle
         }
     }
     vTaskDelete(NULL);
